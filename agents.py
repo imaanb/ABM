@@ -1,6 +1,6 @@
 import math
 
-from mesa.experimental.cell_space import CellAgent
+from mesa.discrete_space import CellAgent
 
 
 # Helper function
@@ -154,7 +154,7 @@ class Trader(CellAgent):
         self.sell_spice(other, sugar_exchanged, spice_exchanged)
 
         return True
-    
+
     def trade(self, other):
         """
         helper function used in trade_with_neighbors()

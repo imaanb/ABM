@@ -1,0 +1,17 @@
+# exact mesa verison
+mesa @ git+https://github.com/projectmesa/mesa@759673a981bf2af5e11ededbf81c918448d86005
+
+# UI stack
+solara
+ipywidgets
+ipympl
+altair
+vega_datasets
+
+# scientific stack
+numpy
+pandas
+scipy
+networkx
+matplotlib
+
