@@ -1,10 +1,12 @@
-from pathlib import Path
+import pkgutil
+from io import StringIO
 
 import mesa
 import numpy as np
 from mesa.discrete_space import OrthogonalVonNeumannGrid
 from mesa.discrete_space.property_layer import PropertyLayer
-from mesa.examples.advanced.sugarscape_g1mt.agents import Trader
+
+from agents import Trader
 
 
 # Helper Functions
@@ -51,6 +53,12 @@ class SugarscapeG1mt(mesa.Model):
         metabolism_max=5,
         vision_min=1,
         vision_max=5,
+        wealth_tax_system="progressive",
+        flat_rate=0.03,
+        wealth_tax_period=10,
+        income_tax_system: str = "proportional",  # "none" | "proportional" | "progressive" | "degressive"
+        income_tax_flat_rate: float = 0.05,  # used only when system=="proportional"
+        income_tax_brackets: list = None,
         enable_trade=True,
         seed=None,
     ):
@@ -62,6 +70,34 @@ class SugarscapeG1mt(mesa.Model):
         # Initiate population attributes
         self.enable_trade = enable_trade
         self.running = True
+
+        # ── INCOME TAX ──
+        self.income_tax_system = income_tax_system
+        self.income_tax_flat_rate = income_tax_flat_rate
+        # default brackets if none provided:
+        self.income_tax_brackets = income_tax_brackets or [
+            (4, 0.02),  # up to 4 units → 2%
+            (7, 0.05),  # up to 7 → 5%
+            (10, 0.10),  # up to 10 → 10%
+            (float("inf"), 0.15),  # above 10 → 15%
+        ]
+
+        # Initiate taxes
+        self.government_treasury_sugar = 0
+        self.government_treasury_spice = 0
+        self.government_treasury_wealth = 0
+
+        # -- WEALTH TAX ──
+        self.wealth_tax_system = wealth_tax_system
+        self.flat_rate = flat_rate
+        self.wealth_tax_period = wealth_tax_period
+
+        self.wealth_tax_brackets = [
+            (50, 0.02),
+            (100, 0.04),
+            (200, 0.06),
+            (float("inf"), 0.08),
+        ]
 
         # initiate mesa grid class
         self.grid = OrthogonalVonNeumannGrid(
@@ -75,13 +111,25 @@ class SugarscapeG1mt(mesa.Model):
                 "Price": lambda m: geometric_mean(
                     flatten([a.prices for a in m.agents])
                 ),
+                "Sugar Treasury": lambda m: m.government_treasury_sugar,
+                "Spice Treasury": lambda m: m.government_treasury_spice,
+                "Wealth Treasury": lambda m: m.government_treasury_wealth,
             },
             agent_reporters={"Trade Network": lambda a: get_trade(a)},
         )
-
+        raw = pkgutil.get_data(
+            "mesa.examples.advanced.sugarscape_g1mt", "sugar-map.txt"
+        )
         # read in landscape file from supplementary material
-        self.sugar_distribution = np.genfromtxt(Path(__file__).parent / "sugar-map.txt")
-        self.spice_distribution = np.flip(self.sugar_distribution, 1)
+        # self.sugar_distribution = np.genfromtxt(Path(__file__).parent / "sugar-map.txt")
+        # self.spice_distribution = np.flip(self.sugar_distribution, 1)
+
+        sd = np.genfromtxt(StringIO(raw.decode("utf-8")), dtype=int)
+        scale = 3
+        sd = (sd * scale).astype(int)
+        self.sugar_distribution = sd
+
+        self.spice_distribution = np.flip(sd, axis=1)
 
         self.grid.add_property_layer(
             PropertyLayer.from_data("sugar", self.sugar_distribution)
@@ -110,6 +158,7 @@ class SugarscapeG1mt(mesa.Model):
                 vision_min, vision_max, (initial_population,), endpoint=True
             ),
         )
+        self.datacollector.collect(self)
 
     def step(self):
         """
@@ -117,11 +166,12 @@ class SugarscapeG1mt(mesa.Model):
         and then randomly activates traders
         """
         # step Resource agents
+        growth = self.rng.integers(1, 5, size=self.grid.sugar.data.shape)
         self.grid.sugar.data = np.minimum(
-            self.grid.sugar.data + 1, self.sugar_distribution
+            self.grid.sugar.data + growth, self.sugar_distribution
         )
         self.grid.spice.data = np.minimum(
-            self.grid.spice.data + 1, self.spice_distribution
+            self.grid.spice.data + growth, self.spice_distribution
         )
 
         # step trader agents
@@ -146,6 +196,11 @@ class SugarscapeG1mt(mesa.Model):
         for agent in trader_shuffle:
             agent.trade_with_neighbors()
 
+        # 4) WEALTH TAX
+        # Every N steps, skim a bit off each agent’s wealth
+        if self.steps % self.wealth_tax_period == 0:
+            for agent in self.agents_by_type[Trader]:
+                agent.pay_wealth_tax()
         # collect model level data
         # fixme we can already collect agent class data
         # fixme, we don't have resource agents anymore so this can be done simpler
@@ -168,6 +223,8 @@ class SugarscapeG1mt(mesa.Model):
         agent_trades = [agent for agent in agent_trades if agent[2] is not None]
         # Reassign the dictionary value with lean trade data
         self.datacollector._agent_records[self.steps] = agent_trades
+        if self.steps == 1:
+            print(self.datacollector.get_model_vars_dataframe().columns)
 
     def run_model(self, step_count=1000):
         for _ in range(step_count):

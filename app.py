@@ -1,7 +1,13 @@
-from mesa.examples.advanced.sugarscape_g1mt.model import SugarscapeG1mt
+import solara
+
+# from mesa.examples.advanced.sugarscape_g1mt.model import SugarscapeG1mt
 from mesa.visualization import Slider, SolaraViz, make_plot_component
 from mesa.visualization.components import AgentPortrayalStyle, PropertyLayerStyle
 from mesa.visualization.components.matplotlib_components import make_mpl_space_component
+
+from model import SugarscapeG1mt
+
+print("🐝 Loading APP.PY at", __file__)
 
 
 def agent_portrayal(agent):
@@ -21,6 +27,14 @@ def propertylayer_portrayal(layer):
             color="blue", alpha=0.8, colorbar=True, vmin=0, vmax=10
         )
     return PropertyLayerStyle(color="red", alpha=0.8, colorbar=True, vmin=0, vmax=10)
+
+
+@solara.component
+def TreasuryDisplay(model):
+    with solara.Card("Government Treasuries"):
+        solara.Text(f"Income‐tax sugar:  {model.government_treasury_sugar:.2f}")
+        solara.Text(f"Income‐tax spice:  {model.government_treasury_spice:.2f}")
+        solara.Text(f"Wealth‐tax sugar: {model.government_treasury_wealth:.2f}")
 
 
 sugarscape_space = make_mpl_space_component(
@@ -55,6 +69,12 @@ model_params = {
     "enable_trade": {"type": "Checkbox", "value": True, "label": "Enable Trading"},
 }
 
+
+# @solara.reactive
+# def create_model():
+#     return SugarscapeG1mt()
+
+
 model = SugarscapeG1mt()
 
 Page = SolaraViz(
@@ -63,6 +83,9 @@ Page = SolaraViz(
         sugarscape_space,
         make_plot_component("#Traders"),
         make_plot_component("Price"),
+        # TreasuryDisplay,
+        # make_plot_component("Wealth Treasury"),
+        # make_plot_component("Spice Treasury"),
     ],
     model_params=model_params,
     name="Sugarscape {G1, M, T}",

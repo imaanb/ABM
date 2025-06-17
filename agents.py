@@ -34,6 +34,8 @@ class Trader(CellAgent):
         metabolism_sugar=0,
         metabolism_spice=0,
         vision=0,
+        income_tax_sugar=0.05,
+        income_tax_spice=0.04,
     ):
         super().__init__(model)
         self.cell = cell
@@ -44,6 +46,25 @@ class Trader(CellAgent):
         self.vision = vision
         self.prices = []
         self.trade_partners = []
+        self.income_tax_sugar = income_tax_sugar
+        self.income_tax_spice = income_tax_spice
+
+    def _get_income_tax_rate(self, income):
+        sys = self.model.income_tax_system
+        if sys == "none":
+            return 0.0
+        if sys == "proportional":
+            return self.model.income_tax_flat_rate
+        # progressive or degressive
+        brackets = list(self.model.income_tax_brackets)
+        if sys == "degressive":
+            # invert only the rates
+            th, rt = zip(*brackets)
+            brackets = list(zip(th, reversed(rt)))
+        for upper, rate in brackets:
+            if income <= upper:
+                return rate
+        return 0.0
 
     def get_trader(self, cell):
         """
@@ -260,12 +281,27 @@ class Trader(CellAgent):
         self.cell = self.random.choice(final_candidates)
 
     def eat(self):
-        self.sugar += self.cell.sugar
-        self.cell.sugar = 0
-        self.sugar -= self.metabolism_sugar
+        income_sugar = self.cell.sugar
+        income_spice = self.cell.spice
 
-        self.spice += self.cell.spice
+        rate_s = self._get_income_tax_rate(income_sugar)
+        rate_p = self._get_income_tax_rate(income_spice)
+
+        tax_s = rate_s * income_sugar
+        tax_p = rate_p * income_spice
+
+        # pay into the separate income treasuries
+        self.model.government_treasury_sugar += tax_s
+        self.model.government_treasury_spice += tax_p
+
+        # agent keeps the rest…
+        self.sugar += income_sugar - tax_s
+        self.spice += income_spice - tax_p
+
+        # clear cell & metabolize as before…
+        self.cell.sugar = 0
         self.cell.spice = 0
+        self.sugar -= self.metabolism_sugar
         self.spice -= self.metabolism_spice
 
     def maybe_die(self):
@@ -289,3 +325,34 @@ class Trader(CellAgent):
             self.trade(a)
 
         return
+
+    def pay_wealth_tax(self):
+        wealth = self.sugar + self.spice
+        sys = self.model.wealth_tax_system
+
+        if sys == "none":
+            rate = 0.0
+        elif sys == "proportional":
+            rate = self.model.flat_rate
+        else:
+            # pick the bracket rate
+            brackets = self.model.wealth_tax_brackets
+            # if degressive, invert the order of rates
+            if sys == "degressive":
+                brackets = [
+                    (ub, r)
+                    for (ub, r) in zip(
+                        [b[0] for b in brackets], reversed([b[1] for b in brackets])
+                    )
+                ]
+            rate = next(r for ub, r in brackets if wealth <= ub)
+
+        # now collect the tax
+        sugar_tax = rate * self.sugar
+        spice_tax = rate * self.spice
+
+        self.sugar -= sugar_tax
+        self.spice -= spice_tax
+
+        self.model.government_treasury_wealth += sugar_tax
+        self.model.government_treasury_wealth += spice_tax
