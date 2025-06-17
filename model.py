@@ -4,7 +4,7 @@ import mesa
 import numpy as np
 from mesa.discrete_space import OrthogonalVonNeumannGrid
 from mesa.discrete_space.property_layer import PropertyLayer
-from mesa.examples.advanced.sugarscape_g1mt.agents import Trader
+from agents import Trader
 
 
 # Helper Functions
@@ -35,7 +35,7 @@ def get_trade(agent):
         return None
 
 
-class SugarscapeG1mt(mesa.Model):
+class SugarscapeG1mtggtt(mesa.Model):
     """
     Manager class to run Sugarscape with Traders
     """
@@ -53,11 +53,20 @@ class SugarscapeG1mt(mesa.Model):
         vision_max=5,
         enable_trade=True,
         seed=None,
+        
     ):
         super().__init__(seed=seed)
         # Initiate width and height of sugarscape
         self.width = width
         self.height = height
+
+
+        self.treasury = {"Sugar": 0 , "Spice": 0 } # Treasury where tax will be collected 
+        self.vat_rate_sugar = .05 # VAT rate 
+        self.vat_rate_spice = .5 # VAT rate 
+
+
+
 
         # Initiate population attributes
         self.enable_trade = enable_trade
@@ -72,9 +81,10 @@ class SugarscapeG1mt(mesa.Model):
             model_reporters={
                 "#Traders": lambda m: len(m.agents),
                 "Trade Volume": lambda m: sum(len(a.trade_partners) for a in m.agents),
-                "Price": lambda m: geometric_mean(
-                    flatten([a.prices for a in m.agents])
-                ),
+                "Price": lambda m: geometric_mean(flatten([a.prices for a in m.agents])),
+                "VAT Sugar": lambda m: m.treasury["Sugar"],      # <-- add this
+                "VAT Spice": lambda m: m.treasury["Spice"],      # <-- add this
+                "VAT Total": lambda m: m.treasury["Sugar"] + m.treasury["Spice"],  # <-- add this
             },
             agent_reporters={"Trade Network": lambda a: get_trade(a)},
         )
