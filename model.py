@@ -133,7 +133,6 @@ class SugarscapeG1mt(mesa.Model):
                             "spice": lambda a: a.spice,
                             "Wealth": lambda a: a.sugar + a.spice}
         )
-<<<<<<< Updated upstream
         raw = pkgutil.get_data(
             "mesa.examples.advanced.sugarscape_g1mt", "sugar-map.txt"
         )
@@ -147,17 +146,6 @@ class SugarscapeG1mt(mesa.Model):
         self.sugar_distribution = sd
 
         self.spice_distribution = np.flip(sd, axis=1)
-=======
-
-        
-
-        # read in landscape file from supplementary material
-        raw = pkgutil.get_data("mesa.examples.advanced.sugarscape_g1mt", "sugar-map.txt")
-        self.sugar_distribution = np.genfromtxt(
-            StringIO(raw.decode("utf-8")), dtype=int
-        )
-        self.spice_distribution = np.flip(self.sugar_distribution, axis=1)
->>>>>>> Stashed changes
 
         self.grid.add_property_layer(
             PropertyLayer.from_data("sugar", self.sugar_distribution)
@@ -188,8 +176,6 @@ class SugarscapeG1mt(mesa.Model):
             
         )
         self.datacollector.collect(self)
-
-        print("Sampled visions:", self.rng.integers(vision_min, vision_max, 10, endpoint=True))
 
     def step(self):
         """
