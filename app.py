@@ -14,7 +14,7 @@ def agent_portrayal(agent):
     return AgentPortrayalStyle(
         x=agent.cell.coordinate[0],
         y=agent.cell.coordinate[1],
-        color="red",
+        color="black",
         marker="o",
         size=10,
         zorder=1,
@@ -67,15 +67,35 @@ model_params = {
     "vision_max": Slider("Max Vision", value=5, min=3, max=8, step=1),
     # Trade parameter
     "enable_trade": {"type": "Checkbox", "value": True, "label": "Enable Trading"},
+    "enable_staghunt": {
+        "type": "Checkbox",
+        "value": False,
+        "label": "Enable Stag Hunt",
+    },
 }
 
+model = SugarscapeG1mt(
+    wealth_tax_system="degressive",
+    flat_rate=0.03,  # only used if system=="proportional"
+    wealth_tax_period=10,  # adjust as you like
+    income_tax_system="proportional",  # "none" | "proportional" | "progressive" | "degressive"
+    income_tax_flat_rate=0.05,  # used only when system=="proport
+    income_tax_brackets=None,  # default brackets will be used if None
+    width=50,
+    height=50,
+    initial_population=200,
+    endowment_min=25,
+    endowment_max=50,
+    metabolism_min=1,
+    metabolism_max=5,
+    vision_min=1,
+    vision_max=5,
+    enable_trade=True,
+    seed=42,
+    enable_staghunt=False,
+)
 
-# @solara.reactive
-# def create_model():
-#     return SugarscapeG1mt()
-
-
-model = SugarscapeG1mt()
+# model = SugarscapeG1mt()
 
 Page = SolaraViz(
     model,

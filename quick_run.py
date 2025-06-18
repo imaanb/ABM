@@ -1,3 +1,4 @@
+from agents import Trader
 from model import SugarscapeG1mt
 
 
@@ -40,5 +41,21 @@ def run_model(n_steps: int = 20):
     return model
 
 
+def sample_income(n_steps=100):
+    model = SugarscapeG1mt(
+        income_tax_system="none",  # disable tax so we only sample
+        wealth_tax_system="none",
+        width=50,
+        height=50,
+    )
+    incomes = []
+    for _ in range(n_steps):
+        model.step()
+        for agent in model.agents_by_type[Trader]:
+            incomes.append(agent._last_income_sugar)  # assuming you stored it
+    print("min:", min(incomes), "max:", max(incomes))
+
+
 if __name__ == "__main__":
     run_model(50)  # run 30 ticks by default
+    # sample_income(100)

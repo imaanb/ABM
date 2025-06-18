@@ -61,6 +61,7 @@ class SugarscapeG1mt(mesa.Model):
         income_tax_brackets: list = None,
         enable_trade=True,
         seed=None,
+        enable_staghunt: bool = False,
     ):
         super().__init__(seed=seed)
         # Initiate width and height of sugarscape
@@ -99,10 +100,20 @@ class SugarscapeG1mt(mesa.Model):
             (float("inf"), 0.08),
         ]
 
+        # Stag hunt game
+        self.enable_staghunt = enable_staghunt
+        self.staghunt_payoffs = {
+            ("stag", "stag"): (12, 12),
+            ("stag", "hare"): (0, 7),
+            ("hare", "stag"): (7, 0),
+            ("hare", "hare"): (7, 7),
+        }
+
         # initiate mesa grid class
         self.grid = OrthogonalVonNeumannGrid(
             (self.width, self.height), torus=False, random=self.random
         )
+        self.space = self.grid
         # initiate datacollector
         self.datacollector = mesa.DataCollector(
             model_reporters={

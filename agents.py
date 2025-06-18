@@ -36,6 +36,7 @@ class Trader(CellAgent):
         vision=0,
         income_tax_sugar=0.05,
         income_tax_spice=0.04,
+        strategy=None,
     ):
         super().__init__(model)
         self.cell = cell
@@ -48,6 +49,7 @@ class Trader(CellAgent):
         self.trade_partners = []
         self.income_tax_sugar = income_tax_sugar
         self.income_tax_spice = income_tax_spice
+        self.strategy = strategy or self.random.choice(["stag", "hare"])
 
     def _get_income_tax_rate(self, income):
         sys = self.model.income_tax_system
@@ -65,6 +67,32 @@ class Trader(CellAgent):
             if income <= upper:
                 return rate
         return 0.0
+
+    def play_staghunt(self):
+        """
+        Pair up with one random neighbor Trader (within vision) and
+        play a stag‐hunt.  Returns the sugars earned by *this* agent,
+        and deposits the partner’s payoff into their own sugar store.
+        """
+
+        neighbors = []
+        for cell in self.cell.get_neighborhood(self.vision, include_center=False):
+            for ag in cell.agents:
+                if isinstance(ag, Trader) and ag is not self:
+                    neighbors.append(ag)
+
+        if not neighbors:
+            return 0
+
+        other = self.random.choice(neighbors)
+
+        payoff_you, payoff_them = self.model.staghunt_payoffs[
+            (self.strategy, other.strategy)
+        ]
+
+        other.sugar += payoff_them
+
+        return payoff_you
 
     def get_trader(self, cell):
         """
@@ -246,6 +274,9 @@ class Trader(CellAgent):
             if cell.is_empty
         ]
 
+        if not neighboring_cells:
+            # no empty neighboring cells, stay put
+            return
         # 2. determine which move maximizes welfare
 
         welfares = [
@@ -281,26 +312,33 @@ class Trader(CellAgent):
         self.cell = self.random.choice(final_candidates)
 
     def eat(self):
-        income_sugar = self.cell.sugar
-        income_spice = self.cell.spice
+        base_sugar = self.cell.sugar
+        base_spice = self.cell.spice
+
+        bonus_sugar = 0
+        if self.model.enable_staghunt:
+            bonus_sugar = self.play_staghunt()
+
+        income_sugar = base_sugar + bonus_sugar
+        income_spice = base_spice
+
+        self._last_income_sugar = income_sugar
+        self._last_income_spice = income_spice
 
         rate_s = self._get_income_tax_rate(income_sugar)
         rate_p = self._get_income_tax_rate(income_spice)
-
         tax_s = rate_s * income_sugar
         tax_p = rate_p * income_spice
 
-        # pay into the separate income treasuries
         self.model.government_treasury_sugar += tax_s
         self.model.government_treasury_spice += tax_p
 
-        # agent keeps the rest…
         self.sugar += income_sugar - tax_s
         self.spice += income_spice - tax_p
 
-        # clear cell & metabolize as before…
         self.cell.sugar = 0
         self.cell.spice = 0
+
         self.sugar -= self.metabolism_sugar
         self.spice -= self.metabolism_spice
 
