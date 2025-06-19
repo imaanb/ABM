@@ -4,6 +4,8 @@ import solara
 from mesa.visualization import Slider, SolaraViz, make_plot_component
 from mesa.visualization.components import AgentPortrayalStyle, PropertyLayerStyle
 from mesa.visualization.components.matplotlib_components import make_mpl_space_component
+from mesa.visualization.utils import update_counter
+from matplotlib.figure import Figure
 
 from model import SugarscapeG1mt
 
@@ -27,6 +29,28 @@ def propertylayer_portrayal(layer):
             color="blue", alpha=0.8, colorbar=True, vmin=0, vmax=10
         )
     return PropertyLayerStyle(color="red", alpha=0.8, colorbar=True, vmin=0, vmax=10)
+
+
+@solara.component
+def LorenzPlot(model):
+    # Holy line of code to make the custom plot also update: https://mesa.readthedocs.io/stable/tutorials/visualization_tutorial.html
+    update_counter.get()
+
+    fig = Figure()
+    ax = fig.add_subplot(111)
+
+    # Lorenz curve 
+    lorenz = model.datacollector.get_model_vars_dataframe().iloc[-1]["Lorenz"]
+    if lorenz:
+        x, y = zip(*lorenz)
+        ax.plot(x, y, label="Lorenz Curve", color="blue")
+        ax.plot([0, 1], [0, 1], "--", color="gray", label="Equality")
+        ax.set_title("Lorenz Curve")
+        ax.set_xlabel("Cumulative Population Share")
+        ax.set_ylabel("Cumulative Wealth Share")
+        ax.legend()
+
+    return solara.FigureMatplotlib(fig)
 
 
 @solara.component
@@ -61,7 +85,7 @@ model_params = {
     "endowment_max": Slider("Max Initial Endowment", value=50, min=30, max=100, step=1),
     # Metabolism parameters
     "metabolism_min": Slider("Min Metabolism", value=1, min=1, max=3, step=1),
-    "metabolism_max": Slider("Max Metabolism", value=5, min=3, max=8, step=1),
+    "metabolism_max": Slider("Max Metabolism", value=5, min=3, max=15, step=1),
     # Vision parameters
     "vision_min": Slider("Min Vision", value=1, min=1, max=3, step=1),
     "vision_max": Slider("Max Vision", value=5, min=3, max=8, step=1),
@@ -103,6 +127,8 @@ Page = SolaraViz(
         sugarscape_space,
         make_plot_component("#Traders"),
         make_plot_component("Price"),
+        make_plot_component("Gini"),
+        LorenzPlot,
         # TreasuryDisplay,
         # make_plot_component("Wealth Treasury"),
         # make_plot_component("Spice Treasury"),

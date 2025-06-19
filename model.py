@@ -38,6 +38,34 @@ def get_trade(agent):
     else:
         return None
 
+# Measurement functions
+# Gini coefficient
+def compute_gini(model):
+    wealths = [a.wealth for a in model.agents]
+    if not wealths:
+        return 0
+    sorted_wealths = np.sort(np.array(wealths))
+    n = len(wealths)
+    cum_wealth = np.cumsum(sorted_wealths)
+    gini = 1 - 2 * np.sum(cum_wealth) / (n * cum_wealth[-1]) + (1 / n)
+    return gini
+
+# Lorenz
+def compute_lorenz(model):
+    wealths = [a.wealth for a in model.agents]
+    if not wealths:
+        return []
+
+    sorted_wealths = np.sort(np.array(wealths))
+    cum_wealth = np.cumsum(sorted_wealths)
+    total_wealth = cum_wealth[-1]
+
+    lorenz_curve = np.insert(cum_wealth / total_wealth, 0, 0)  
+    x = np.linspace(0, 1, len(lorenz_curve))  
+
+    return list(zip(x.tolist(), lorenz_curve.tolist()))
+
+
 
 class SugarscapeG1mt(mesa.Model):
     """
@@ -66,6 +94,9 @@ class SugarscapeG1mt(mesa.Model):
         enable_staghunt: bool = False,
     ):
         super().__init__(seed=seed)
+
+        self.with_spice = True
+
         # Initiate width and height of sugarscape
         self.width = width
         self.height = height
@@ -102,6 +133,7 @@ class SugarscapeG1mt(mesa.Model):
             (float("inf"), 0.08),
         ]
 
+
         # Stag hunt game
         self.enable_staghunt = enable_staghunt
         self.staghunt_payoffs = {
@@ -127,6 +159,8 @@ class SugarscapeG1mt(mesa.Model):
                 "Sugar Treasury": lambda m: m.government_treasury_sugar,
                 "Spice Treasury": lambda m: m.government_treasury_spice,
                 "Wealth Treasury": lambda m: m.government_treasury_wealth,
+                "Gini": compute_gini,
+                "Lorenz": compute_lorenz 
             },
             agent_reporters={"Trade Network": lambda a: get_trade(a),
                             "sugar": lambda a: a.sugar,
@@ -150,9 +184,11 @@ class SugarscapeG1mt(mesa.Model):
         self.grid.add_property_layer(
             PropertyLayer.from_data("sugar", self.sugar_distribution)
         )
-        self.grid.add_property_layer(
-            PropertyLayer.from_data("spice", self.spice_distribution)
-        )
+
+        if self.with_spice == True:
+            self.grid.add_property_layer(
+                PropertyLayer.from_data("spice", self.spice_distribution)
+            )
 
         Trader.create_agents(
             self,
@@ -181,15 +217,19 @@ class SugarscapeG1mt(mesa.Model):
         """
         Unique step function that does staged activation of sugar and spice
         and then randomly activates traders
+
+        NOTE: MAX GROWTH CAPPED AT 4, see growth = self.rng.integers(1, 5..
         """
         # step Resource agents
         growth = self.rng.integers(1, 5, size=self.grid.sugar.data.shape)
         self.grid.sugar.data = np.minimum(
             self.grid.sugar.data + growth, self.sugar_distribution
         )
-        self.grid.spice.data = np.minimum(
-            self.grid.spice.data + growth, self.spice_distribution
-        )
+
+        if self.with_spice == True:
+            self.grid.spice.data = np.minimum(
+                self.grid.spice.data + growth, self.spice_distribution
+            )
 
         # step trader agents
         # to account for agent death and removal we need a separate data structure to
@@ -246,3 +286,5 @@ class SugarscapeG1mt(mesa.Model):
     def run_model(self, step_count=1000):
         for _ in range(step_count):
             self.step()
+
+

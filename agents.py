@@ -50,6 +50,10 @@ class Trader(CellAgent):
         self.income_tax_sugar = income_tax_sugar
         self.income_tax_spice = income_tax_spice
         self.strategy = strategy or self.random.choice(["stag", "hare"])
+    
+    @property
+    def wealth(self):
+        return self.sugar + self.spice
 
     def _get_income_tax_rate(self, income):
         sys = self.model.income_tax_system
@@ -278,7 +282,7 @@ class Trader(CellAgent):
             # no empty neighboring cells, stay put
             return
         # 2. determine which move maximizes welfare
-
+        
         welfares = [
             self.calculate_welfare(
                 self.sugar + cell.sugar,
