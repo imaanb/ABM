@@ -120,8 +120,9 @@ class Trader(CellAgent):
         self.spice -= spice
         other.spice += spice -spice_vat
 
-        self.model.treasury["Sugar"] += sugar_vat 
-        self.model.treasury["Spice"] += spice_vat
+        self.model.treasury["sugar"] += sugar_vat 
+        self.model.treasury["spice"] += spice_vat
+
 
     def maybe_sell_spice(self, other, price, welfare_self, welfare_other):
         """
@@ -196,12 +197,15 @@ class Trader(CellAgent):
         # calculate price
         price = math.sqrt(mrs_self * mrs_other)
 
+        
+
         if mrs_self > mrs_other:
             # self is a sugar buyer, spice seller
             sold = self.maybe_sell_spice(other, price, welfare_self, welfare_other)
             # no trade - criteria not met
             if not sold:
                 return
+            
         else:
             # self is a spice buyer, sugar seller
             sold = other.maybe_sell_spice(self, price, welfare_other, welfare_self)
@@ -212,7 +216,7 @@ class Trader(CellAgent):
         # Capture data
         self.prices.append(price)
         self.trade_partners.append(other.unique_id)
-
+        self.model.trades_made += 1 
         # continue trading
         self.trade(other)
 

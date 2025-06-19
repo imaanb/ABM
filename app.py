@@ -1,4 +1,4 @@
-from mesa.examples.advanced.sugarscape_g1mt.model import SugarscapeG1mt
+from model  import SugarscapeG1mt
 from mesa.visualization import Slider, SolaraViz, make_plot_component
 from mesa.visualization.components import AgentPortrayalStyle, PropertyLayerStyle
 from mesa.visualization.components.matplotlib_components import make_mpl_space_component
@@ -55,6 +55,13 @@ model_params = {
     "enable_trade": {"type": "Checkbox", "value": True, "label": "Enable Trading"},
 }
 
+
+
+
+
+
+
+
 model = SugarscapeG1mt()
 
 Page = SolaraViz(
@@ -63,9 +70,16 @@ Page = SolaraViz(
         sugarscape_space,
         make_plot_component("#Traders"),
         make_plot_component("Price"),
+        make_plot_component("Treasury from VAT"),
+        make_plot_component("redistributed cummulative"), 
+        make_plot_component("trading")
+
+
     ],
     model_params=model_params,
     name="Sugarscape {G1, M, T}",
     play_interval=150,
 )
 Page  # noqa
+
+
