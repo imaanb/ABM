@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
-from model import SugarscapeG1mtggtt
+from model import SugarscapeG1mt 
 # After running your model:
-model = SugarscapeG1mtggtt()
+model = SugarscapeG1mt()
 model.run_model(step_count=10)
 
 # Get the collected data
