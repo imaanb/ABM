@@ -130,6 +130,8 @@ Page = SolaraViz(
         make_plot_component("Price"),
         make_plot_component("Gini"),
         LorenzPlot,
+        make_plot_component("Treasury Total"),
+        make_plot_component("redistributed cummulative")
         # TreasuryDisplay,
         # make_plot_component("Wealth Treasury"),
         # make_plot_component("Spice Treasury"),
