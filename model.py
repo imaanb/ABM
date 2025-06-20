@@ -75,47 +75,56 @@ class SugarscapeG1mt(mesa.Model):
 
     def __init__(
         self,
+        #general
         width=50,
         height=50,
         initial_population=200,
+        # agents settings 
         endowment_min=25,
         endowment_max=50,
         metabolism_min=1,
         metabolism_max=5,
         vision_min=1,
         vision_max=5,
+        #taxes 
         wealth_tax_system="progressive",
         flat_rate=0.03,
         wealth_tax_period=10,
         income_tax_system: str = "proportional",  # "none" | "proportional" | "progressive" | "degressive"
         income_tax_flat_rate: float = 0.05,  # used only when system=="proportional"
         income_tax_brackets: list = None,
+        vat_rate_sugar = .2,
+        vat_rate_spice = .2 ,        
+        #redistribution 
+        redistribution_regime = "proportional",  # "social" or "proportional" 
         enable_trade=True,
         seed=None,
         enable_staghunt: bool = False,
     ):
+        
+
+
         super().__init__(seed=seed)
 
         self.with_spice = True
 
         # Initiate width and height of sugarscape
-        raw = pkgutil.get_data("mesa.examples.advanced.sugarscape_g1mt", "sugar-map.txt") 
-        self.sugar_distribution = np.genfromtxt(StringIO(raw.decode("utf-8")), dtype=int)
-        
-        self.spice_distribution = np.flip(self.sugar_distribution,axis=1)
+                
         self.width = width
         self.height = height
+        
+        
 
-
+        # -- TREASURY -- # 
         self.treasury = {"sugar": 0 , "spice": 0 } # Treasury where tax will be collected 
-        self.vat_rate_sugar = .2 # VAT rate 
-        self.vat_rate_spice = .2 # VAT rate 
-        self.redistribution_regime = "social" # Choose from "geographic", "proportional", "social" 
         self.resources = ["sugar", "spice"]
-        self.redistributed = 0 
-        self.VAT_collected = 0 
-        self.trades_made = 0
-        self.trades_list = []  # List to store trades made at each timestep
+        """
+        # Initiate taxes
+        self.government_treasury_sugar = 0
+        self.government_treasury_spice = 0
+        self.government_treasury_wealth = 0
+        """
+       
 
 
         # Initiate population attributes
@@ -133,10 +142,7 @@ class SugarscapeG1mt(mesa.Model):
             (float("inf"), 0.15),  # above 10 → 15%
         ]
 
-        # Initiate taxes
-        self.government_treasury_sugar = 0
-        self.government_treasury_spice = 0
-        self.government_treasury_wealth = 0
+        
 
         # -- WEALTH TAX ──
         self.wealth_tax_system = wealth_tax_system
@@ -149,6 +155,17 @@ class SugarscapeG1mt(mesa.Model):
             (200, 0.06),
             (float("inf"), 0.08),
         ]
+
+        # -- VAT --
+        self.vat_rate_sugar, self.vat_rate_spice = vat_rate_sugar, vat_rate_spice
+        self.VAT_collected = 0  # cummualtive 
+
+        ## -- TRADING -- 
+        self.trades_made = 0 # cummulative 
+
+        # -- REDISTRIBUTION -- 
+        self.redistribution_regime = redistribution_regime
+        self.redistributed = 0  # cummulative 
 
 
         # Stag hunt game
@@ -171,14 +188,14 @@ class SugarscapeG1mt(mesa.Model):
                 "#Traders": lambda m: len(m.agents),
                 "Trade Volume": lambda m: sum(len(a.trade_partners) for a in m.agents),
                 "Price": lambda m: geometric_mean(flatten([a.prices for a in m.agents])),
-                "VAT Sugar": lambda m: m.treasury["sugar"],      
-                "VAT Spice": lambda m: m.treasury["spice"],     
-                "Treasury from VAT": lambda m: m.treasury["sugar"] + m.treasury["spice"],  
+                "Treasury Sugar": lambda m: m.treasury["sugar"],      
+                "Treasury Spice": lambda m: m.treasury["spice"],     
+                "Treasury Total": lambda m: m.treasury["sugar"] + m.treasury["spice"],  
                 "redistributed cummulative": lambda m: m.redistributed, 
                 "trading": lambda m:m.trades_made,
-                "Sugar Treasury": lambda m: m.government_treasury_sugar,
-                "Spice Treasury": lambda m: m.government_treasury_spice,
-                "Wealth Treasury": lambda m: m.government_treasury_wealth,
+                #"Sugar Treasury": lambda m: m.government_treasury_sugar,
+                #"Spice Treasury": lambda m: m.government_treasury_spice,
+                #"Wealth Treasury": lambda m: m.government_treasury_wealth,
                 "Gini": compute_gini,
                 "Lorenz": compute_lorenz 
             },
@@ -247,9 +264,16 @@ class SugarscapeG1mt(mesa.Model):
                 if len(self.agents) > 0 and total > 0:
                     share = total / len(self.agents)
                     for agent in self.agents:
-                        setattr(agent, resource.lower(), getattr(agent, resource.lower()) + share)
-                    self.treasury[resource] -= share * len(self.agents)
-                    self.redistributed += share * len(self.agents)
+                        if self.treasury[resource] >= share:
+                            setattr(agent, resource.lower(), getattr(agent, resource.lower()) + share)
+                            self.treasury[resource] -= share
+                            self.redistributed += share
+                        else:
+                            # Not enough left in treasury for a full share, give what's left and break
+                            setattr(agent, resource.lower(), getattr(agent, resource.lower()) + self.treasury[resource])
+                            self.redistributed += self.treasury[resource]
+                            self.treasury[resource] = 0
+                            break
 
         # Social: poor (assest based) get more 
         elif self.redistribution_regime == "social":  
@@ -267,65 +291,18 @@ class SugarscapeG1mt(mesa.Model):
                     distributed = 0
                     for (agent, _), w in zip(agent_wealth, weights):
                         give = w * total
+                        give = min(give, self.treasury[resource])  # Ensure treasury has enough
+                        if give <= 0:
+                            break
                         setattr(agent, resource.lower(), getattr(agent, resource.lower()) + give)
                         distributed += give
-                    #print(f"Total: {total}, Distributed: {distributed}, Leftover: {total - distributed}")
-
-                    self.treasury[resource] -= distributed
+                        self.treasury[resource] -= give
+                        if self.treasury[resource] <= 0:
+                            break
                     self.redistributed += distributed
 
         else: 
             print("redistribution regime not known")
-
-
-
-
-    
-
-    def redistribute_tax(self):
-        """
-        Redistribute the tax collected in the treasury according to the selected regime.
-        - 'proportional': Give all agents a percentage of the treasury.
-        - 'social': Give poorer agents (with less total wealth) a larger share.
-        """
-
-        # proportinal: each agent gets equal amount 
-        if self.redistribution_regime == "proportional":
-            for resource in  self.resources:
-                total = self.treasury[resource]
-                if len(self.agents) > 0 and total > 0:
-                    share = total / len(self.agents)
-                    for agent in self.agents:
-                        setattr(agent, resource.lower(), getattr(agent, resource.lower()) + share)
-                    self.treasury[resource] -= share * len(self.agents)
-                    self.redistributed += share * len(self.agents)
-
-        # Social: poor (assest based) get more 
-        elif self.redistribution_regime == "social":  
-            for resource in self.resources:
-                total = self.treasury[resource]
-                if total > 0 and len(self.agents) > 0:
-                    # calculate total wealth for each agent
-                    agent_wealth = [(agent, getattr(agent, "sugar") + getattr(agent, "spice")) for agent in self.agents]
-                    agent_wealth.sort(key=lambda x: x[1])  # Sort by wealth ascending
-                    
-                    # Assign weights inversely proportional to wealth
-                    ranks = np.arange(1, len(agent_wealth) + 1)
-                    weights = (len(agent_wealth) + 1 - ranks)
-                    weights = weights / weights.sum()
-                    distributed = 0
-                    for (agent, _), w in zip(agent_wealth, weights):
-                        give = w * total
-                        setattr(agent, resource.lower(), getattr(agent, resource.lower()) + give)
-                        distributed += give
-                    #print(f"Total: {total}, Distributed: {distributed}, Leftover: {total - distributed}")
-
-                    self.treasury[resource] -= distributed
-                    self.redistributed += distributed
-
-        else: 
-            print("redistribution regime not known")
-
 
 
 
