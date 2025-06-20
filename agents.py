@@ -128,6 +128,7 @@ class Trader(CellAgent):
         Helper function for self.maybe_die()
         """
 
+
         return (self.sugar <= 0) or (self.spice <= 0)
 
     def calculate_MRS(self, sugar, spice):
@@ -161,11 +162,20 @@ class Trader(CellAgent):
 
         exchanges sugar and spice between traders
         """
+        vat_rate_sugar, vat_rate_spice  = self.model.vat_rate_sugar, self.model.vat_rate_spice
 
-        self.sugar += sugar
+        sugar_vat = sugar * vat_rate_sugar
+        spice_vat = spice * vat_rate_spice
+
+
+        self.sugar += sugar -sugar_vat
         other.sugar -= sugar
         self.spice -= spice
-        other.spice += spice
+        other.spice += spice -spice_vat
+
+        self.model.treasury["sugar"] += sugar_vat 
+        self.model.treasury["spice"] += spice_vat
+
 
     def maybe_sell_spice(self, other, price, welfare_self, welfare_other):
         """
@@ -173,13 +183,19 @@ class Trader(CellAgent):
         """
 
         sugar_exchanged, spice_exchanged = self.calculate_sell_spice_amount(price)
+        
+        
+        
+        vat_rate_sugar, vat_rate_spice = self.model.vat_rate_sugar, self.model.vat_rate_spice 
+        sugar_vat = sugar_exchanged * vat_rate_sugar
+        spice_vat = spice_exchanged * vat_rate_spice
+
 
         # Assess new sugar and spice amount - what if change did occur
-        self_sugar = self.sugar + sugar_exchanged
+        self_sugar = self.sugar + sugar_exchanged - sugar_vat
         other_sugar = other.sugar - sugar_exchanged
         self_spice = self.spice - spice_exchanged
-        other_spice = other.spice + spice_exchanged
-
+        other_spice = other.spice + spice_exchanged -spice_vat
         # double check to ensure agents have resources
 
         if (
@@ -205,7 +221,6 @@ class Trader(CellAgent):
 
         # criteria met, execute trade
         self.sell_spice(other, sugar_exchanged, spice_exchanged)
-
         return True
 
     def trade(self, other):
@@ -235,12 +250,15 @@ class Trader(CellAgent):
         # calculate price
         price = math.sqrt(mrs_self * mrs_other)
 
+        
+
         if mrs_self > mrs_other:
             # self is a sugar buyer, spice seller
             sold = self.maybe_sell_spice(other, price, welfare_self, welfare_other)
             # no trade - criteria not met
             if not sold:
                 return
+            
         else:
             # self is a spice buyer, sugar seller
             sold = other.maybe_sell_spice(self, price, welfare_other, welfare_self)
@@ -251,7 +269,7 @@ class Trader(CellAgent):
         # Capture data
         self.prices.append(price)
         self.trade_partners.append(other.unique_id)
-
+        self.model.trades_made += 1 
         # continue trading
         self.trade(other)
 

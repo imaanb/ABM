@@ -1,6 +1,7 @@
 import solara
 
 # from mesa.examples.advanced.sugarscape_g1mt.model import SugarscapeG1mt
+from model  import SugarscapeG1mt
 from mesa.visualization import Slider, SolaraViz, make_plot_component
 from mesa.visualization.components import AgentPortrayalStyle, PropertyLayerStyle
 from mesa.visualization.components.matplotlib_components import make_mpl_space_component
@@ -138,3 +139,5 @@ Page = SolaraViz(
     play_interval=150,
 )
 Page  # noqa
+
+
