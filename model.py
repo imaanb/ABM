@@ -42,7 +42,7 @@ def get_trade(agent):
 # Measurement functions
 # Gini coefficient
 def compute_gini(model):
-    wealths = [a.wealth for a in model.agents]
+    wealths = [a.calculate_welfare(a.sugar, a.spice) for a in model.agents]
     if not wealths:
         return 0
     sorted_wealths = np.sort(np.array(wealths))
@@ -53,7 +53,7 @@ def compute_gini(model):
 
 # Lorenz
 def compute_lorenz(model):
-    wealths = [a.wealth for a in model.agents]
+    wealths = [a.calculate_welfare(a.sugar, a.spice) for a in model.agents]
     if not wealths:
         return []
 
@@ -110,7 +110,7 @@ class SugarscapeG1mt(mesa.Model):
         self.treasury = {"sugar": 0 , "spice": 0 } # Treasury where tax will be collected 
         self.vat_rate_sugar = .2 # VAT rate 
         self.vat_rate_spice = .2 # VAT rate 
-        self.redistribution_regime = "social" # Choose from "geographic", "proportional", "social" 
+        self.redistribution_regime = "proportional" # Choose from "geographic", "proportional", "social" 
         self.resources = ["sugar", "spice"]
         self.redistributed = 0 
         self.VAT_collected = 0 
@@ -127,9 +127,9 @@ class SugarscapeG1mt(mesa.Model):
         self.income_tax_flat_rate = income_tax_flat_rate
         # default brackets if none provided:
         self.income_tax_brackets = income_tax_brackets or [
-            (4, 0.02),  # up to 4 units → 2%
-            (7, 0.05),  # up to 7 → 5%
-            (10, 0.10),  # up to 10 → 10%
+            (1, 0.02),  # up to 4 units → 2%
+            (2, 0.05),  # up to 7 → 5%
+            (3, 0.10),  # up to 10 → 10%
             (float("inf"), 0.15),  # above 10 → 15%
         ]
 
@@ -195,8 +195,8 @@ class SugarscapeG1mt(mesa.Model):
         # self.spice_distribution = np.flip(self.sugar_distribution, 1)
 
         sd = np.genfromtxt(StringIO(raw.decode("utf-8")), dtype=int)
-        scale = 3
-        sd = (sd * scale).astype(int)
+        # scale = 3
+        # sd = (sd * scale).astype(int)
         self.sugar_distribution = sd
 
         self.spice_distribution = np.flip(sd, axis=1)

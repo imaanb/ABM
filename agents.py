@@ -42,6 +42,8 @@ class Trader(CellAgent):
         self.cell = cell
         self.sugar = sugar
         self.spice = spice
+        self.initial_sugar = sugar
+        self.initial_spice = spice
         self.metabolism_sugar = metabolism_sugar
         self.metabolism_spice = metabolism_spice
         self.vision = vision
@@ -370,7 +372,12 @@ class Trader(CellAgent):
         """
 
         if self.is_starved():
-            self.remove()
+            self.sugar = self.initial_sugar
+            self.spice = self.initial_spice
+            self.cell = self.model.random.choice(self.model.grid.all_cells.cells)
+
+
+
 
     def trade_with_neighbors(self):
         """
