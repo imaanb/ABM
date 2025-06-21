@@ -42,7 +42,8 @@ def get_trade(agent):
 # Measurement functions
 # Gini coefficient
 def compute_gini(model):
-    wealths = [a.calculate_welfare(a.sugar, a.spice) for a in model.agents]
+    # wealths = [a.calculate_welfare(a.sugar, a.spice) for a in model.agents]
+    wealths = [a.wealth for a in model.agents]
     if not wealths:
         return 0
     sorted_wealths = np.sort(np.array(wealths))
@@ -53,7 +54,8 @@ def compute_gini(model):
 
 # Lorenz
 def compute_lorenz(model):
-    wealths = [a.calculate_welfare(a.sugar, a.spice) for a in model.agents]
+    # wealths = [a.calculate_welfare(a.sugar, a.spice) for a in model.agents]
+    wealths = [a.wealth for a in model.agents]
     if not wealths:
         return []
 
@@ -96,7 +98,7 @@ class SugarscapeG1mt(mesa.Model):
         vat_rate_sugar = .2,
         vat_rate_spice = .2 ,        
         #redistribution 
-        redistribution_regime = "proportional",  # "social" or "proportional" 
+        redistribution_regime = "proportional",  # "social" or "proportional" or "none"
         enable_trade=True,
         seed=None,
         enable_staghunt: bool = False,
@@ -105,8 +107,6 @@ class SugarscapeG1mt(mesa.Model):
 
 
         super().__init__(seed=seed)
-
-        self.with_spice = True
 
         # Initiate width and height of sugarscape
                 
@@ -117,9 +117,9 @@ class SugarscapeG1mt(mesa.Model):
 
         # -- TREASURY -- # 
         self.treasury = {"sugar": 0 , "spice": 0 } # Treasury where tax will be collected 
-        self.vat_rate_sugar = .2 # VAT rate 
-        self.vat_rate_spice = .2 # VAT rate 
-        self.redistribution_regime = "proportional" # Choose from "geographic", "proportional", "social" 
+        # self.vat_rate_sugar = .2 # VAT rate 
+        # self.vat_rate_spice = .2 # VAT rate 
+        # self.redistribution_regime = "proportional" # Choose from "geographic", "proportional", "social" 
         self.resources = ["sugar", "spice"]
         """
         # Initiate taxes
@@ -139,10 +139,10 @@ class SugarscapeG1mt(mesa.Model):
         self.income_tax_flat_rate = income_tax_flat_rate
         # default brackets if none provided:
         self.income_tax_brackets = income_tax_brackets or [
-            (1, 0.02),  # up to 4 units → 2%
-            (2, 0.05),  # up to 7 → 5%
-            (3, 0.10),  # up to 10 → 10%
-            (float("inf"), 0.15),  # above 10 → 15%
+            (1, 0.05),  # up to 4 units → 2%
+            (2, 0.1),  # up to 7 → 5%
+            (3, 0.2),  # up to 10 → 10%
+            (float("inf"), 0.3),  # above 10 → 15%
         ]
 
         
@@ -153,10 +153,10 @@ class SugarscapeG1mt(mesa.Model):
         self.wealth_tax_period = wealth_tax_period
 
         self.wealth_tax_brackets = [
-            (50, 0.02),
-            (100, 0.04),
-            (200, 0.06),
-            (float("inf"), 0.08),
+            (50, 0.05),
+            (100, 0.1),
+            (200, 0.2),
+            (float("inf"), 0.3),
         ]
 
         # -- VAT --
@@ -169,7 +169,7 @@ class SugarscapeG1mt(mesa.Model):
         # -- REDISTRIBUTION -- 
         self.redistribution_regime = redistribution_regime
         self.redistributed = 0  # cummulative 
-
+        self.redistribution_regime = redistribution_regime
 
         # Stag hunt game
         self.enable_staghunt = enable_staghunt
@@ -225,8 +225,7 @@ class SugarscapeG1mt(mesa.Model):
             PropertyLayer.from_data("sugar", self.sugar_distribution)
         )
 
-        if self.with_spice == True:
-            self.grid.add_property_layer(
+        self.grid.add_property_layer(
                 PropertyLayer.from_data("spice", self.spice_distribution)
             )
 
@@ -259,7 +258,10 @@ class SugarscapeG1mt(mesa.Model):
         - 'proportional': Give all agents a percentage of the treasury.
         - 'social': Give poorer agents (with less total wealth) a larger share.
         """
-
+        # skip if none
+        if self.redistribution_regime == "none":
+            return
+        
         # proportinal: each agent gets equal amount 
         if self.redistribution_regime == "proportional":
             for resource in  self.resources:
@@ -325,8 +327,7 @@ class SugarscapeG1mt(mesa.Model):
             self.grid.sugar.data + growth, self.sugar_distribution
         )
 
-        if self.with_spice == True:
-            self.grid.spice.data = np.minimum(
+        self.grid.spice.data = np.minimum(
                 self.grid.spice.data + growth, self.spice_distribution
             )
 
@@ -358,10 +359,11 @@ class SugarscapeG1mt(mesa.Model):
         if self.steps % self.wealth_tax_period == 0:
             for agent in self.agents_by_type[Trader]:
                 agent.pay_wealth_tax()
+            # outside or inside if statement? 
+            self.redistribute_tax()
         # collect model level data
         # fixme we can already collect agent class data
         # fixme, we don't have resource agents anymore so this can be done simpler
-        self.redistribute_tax()
 
         self.datacollector.collect(self)
 
