@@ -139,10 +139,10 @@ class SugarscapeG1mt(mesa.Model):
         self.income_tax_flat_rate = income_tax_flat_rate
         # default brackets if none provided:
         self.income_tax_brackets = income_tax_brackets or [
-            (1, 0.05),  # up to 4 units → 2%
-            (2, 0.1),  # up to 7 → 5%
-            (3, 0.2),  # up to 10 → 10%
-            (float("inf"), 0.3),  # above 10 → 15%
+            (1, 0.025),  # up to 4 units → 2%
+            (2, 0.05),  # up to 7 → 5%
+            (3, 0.075),  # up to 10 → 10%
+            (float("inf"), 0.1),  # above 10 → 15%
         ]
 
         
@@ -258,10 +258,14 @@ class SugarscapeG1mt(mesa.Model):
         - 'proportional': Give all agents a percentage of the treasury.
         - 'social': Give poorer agents (with less total wealth) a larger share.
         """
+        print("hi")
         # skip if none
         if self.redistribution_regime == "none":
             return
         
+        print(f"[step {self.steps}] Redistribution regime: {self.redistribution_regime}")
+        print(f"  Treasury sugar: {self.treasury['sugar']:.2f}, spice: {self.treasury['spice']:.2f}")
+
         # proportinal: each agent gets equal amount 
         if self.redistribution_regime == "proportional":
             for resource in  self.resources:
@@ -273,6 +277,7 @@ class SugarscapeG1mt(mesa.Model):
                             setattr(agent, resource.lower(), getattr(agent, resource.lower()) + share)
                             self.treasury[resource] -= share
                             self.redistributed += share
+                            print(f"  Distributed {distributed:.2f} {resource}")
                         else:
                             # Not enough left in treasury for a full share, give what's left and break
                             setattr(agent, resource.lower(), getattr(agent, resource.lower()) + self.treasury[resource])
@@ -311,6 +316,9 @@ class SugarscapeG1mt(mesa.Model):
 
 
 
+
+
+
     
 
     def step(self):
@@ -320,7 +328,6 @@ class SugarscapeG1mt(mesa.Model):
 
         NOTE: MAX GROWTH CAPPED AT 4, see growth = self.rng.integers(1, 5..
         """
-
         # step Resource agents
         growth = self.rng.integers(1, 5, size=self.grid.sugar.data.shape)
         self.grid.sugar.data = np.minimum(
@@ -330,7 +337,6 @@ class SugarscapeG1mt(mesa.Model):
         self.grid.spice.data = np.minimum(
                 self.grid.spice.data + growth, self.spice_distribution
             )
-
         # step trader agents
         # to account for agent death and removal we need a separate data structure to
         # iterate
@@ -343,11 +349,11 @@ class SugarscapeG1mt(mesa.Model):
             agent.eat()
             agent.maybe_die()
 
-
-        if not self.enable_trade:
-            # If trade is not enabled, return early
-            self.datacollector.collect(self)
-            return
+        # if not self.enable_trade:
+        #     # If trade is not enabled, return early
+        #     self.datacollector.collect(self)
+        #     return
+        
 
         trader_shuffle = self.agents_by_type[Trader].shuffle()
 
@@ -357,6 +363,7 @@ class SugarscapeG1mt(mesa.Model):
         # 4) WEALTH TAX
         # Every N steps, skim a bit off each agent’s wealth
         if self.steps % self.wealth_tax_period == 0:
+
             for agent in self.agents_by_type[Trader]:
                 agent.pay_wealth_tax()
             # outside or inside if statement? 

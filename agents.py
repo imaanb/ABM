@@ -349,10 +349,15 @@ class Trader(CellAgent):
         self._last_income_sugar = income_sugar
         self._last_income_spice = income_spice
 
-        rate_s = self._get_income_tax_rate(income_sugar)
-        rate_p = self._get_income_tax_rate(income_spice)
-        tax_s = rate_s * income_sugar
-        tax_p = rate_p * income_spice
+        # rate_s = self._get_income_tax_rate(income_sugar)
+        # rate_p = self._get_income_tax_rate(income_spice)
+        # tax_s = rate_s * income_sugar
+        # tax_p = rate_p * income_spice
+
+        total_income = income_sugar + income_spice
+        rate = self._get_income_tax_rate(total_income)
+        tax_s = rate * income_sugar
+        tax_p = rate * income_spice
 
         self.model.treasury["sugar"]  += tax_s
         self.model.treasury["spice"]  += tax_p
