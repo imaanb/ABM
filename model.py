@@ -192,6 +192,8 @@ class SugarscapeG1mt(mesa.Model):
                 # "Wealth Treasury": lambda m: m.government_treasury_wealth,
                 "Gini": compute_gini,
                 "Lorenz": compute_lorenz,
+                "Average Wealth": lambda m: np.mean([a.sugar + a.spice for a in m.agents]) if m.agents else 0,
+            
             },
             agent_reporters={
                 "Trade Network": lambda a: get_trade(a),
@@ -398,7 +400,8 @@ class SugarscapeG1mt(mesa.Model):
         self.datacollector._agent_records[self.steps] = agent_trades
         if self.steps == 1:
             print(self.datacollector.get_model_vars_dataframe().columns)
-
+            
+    
     def run_model(self, step_count=1000):
         for _ in range(step_count):
             self.step()
