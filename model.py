@@ -97,6 +97,8 @@ class SugarscapeG1mt(mesa.Model):
         vat_rate_spice=0.2,
         # redistribution
         redistribution_regime="proportional",  # "social" or "proportional" or "none"
+        p_copy: float = 0.8,  # probability of copying trade partner's price
+        p_mutate: float = 0.02,
         enable_trade=True,
         seed=None,
         enable_staghunt: bool = False,
@@ -163,11 +165,15 @@ class SugarscapeG1mt(mesa.Model):
         # Stag hunt game
         self.enable_staghunt = enable_staghunt
         self.staghunt_payoffs = {
-            ("stag", "stag"): (12, 12),
-            ("stag", "hare"): (0, 7),
-            ("hare", "stag"): (7, 0),
-            ("hare", "hare"): (7, 7),
+            ("stag", "stag"): (4, 4),
+            ("stag", "hare"): (0, 2),
+            ("hare", "stag"): (2, 0),
+            ("hare", "hare"): (2, 2),
         }
+
+        # Imitiation parameters
+        self.p_copy = p_copy  # probability of copying trade partner's price
+        self.p_mutate = p_mutate  # probability of mutating trade partner's price
 
         # initiate mesa grid class
         self.grid = OrthogonalVonNeumannGrid(
@@ -179,9 +185,9 @@ class SugarscapeG1mt(mesa.Model):
             model_reporters={
                 "#Traders": lambda m: len(m.agents),
                 "Trade Volume": lambda m: sum(len(a.trade_partners) for a in m.agents),
-                "Price": lambda m: geometric_mean(
-                    flatten([a.prices for a in m.agents])
-                ),
+                # "Price": lambda m: geometric_mean(
+                #     flatten([a.prices for a in m.agents])
+                # ),
                 "Treasury Sugar": lambda m: m.treasury["sugar"],
                 "Treasury Spice": lambda m: m.treasury["spice"],
                 "Treasury Total": lambda m: m.treasury["sugar"] + m.treasury["spice"],
@@ -192,6 +198,13 @@ class SugarscapeG1mt(mesa.Model):
                 # "Wealth Treasury": lambda m: m.government_treasury_wealth,
                 "Gini": compute_gini,
                 "Lorenz": compute_lorenz,
+                "Average Wealth": lambda m: np.mean(
+                    [a.sugar + a.spice for a in m.agents]
+                ),
+                "Frac_stag": lambda m: sum(a.strategy == "stag" for a in m.agents)
+                / len(m.agents)
+                if m.agents
+                else 0,
             },
             agent_reporters={
                 "Trade Network": lambda a: get_trade(a),
@@ -365,6 +378,11 @@ class SugarscapeG1mt(mesa.Model):
         for agent in trader_shuffle:
             agent.trade_with_neighbors()
 
+        if self.enable_staghunt:
+            # Step 3: Stag Hunt Game
+            for agent in self.agents_by_type[Trader]:
+                agent.imitation_update()
+
         # 4) WEALTH TAX
         # Every N steps, skim a bit off each agent’s wealth
         if self.steps % self.wealth_tax_period == 0:
@@ -396,8 +414,8 @@ class SugarscapeG1mt(mesa.Model):
         agent_trades = [agent for agent in agent_trades if agent[2] is not None]
         # Reassign the dictionary value with lean trade data
         self.datacollector._agent_records[self.steps] = agent_trades
-        if self.steps == 1:
-            print(self.datacollector.get_model_vars_dataframe().columns)
+        # if self.steps == 1:
+        #     print(self.datacollector.get_model_vars_dataframe().columns)
 
     def run_model(self, step_count=1000):
         for _ in range(step_count):

@@ -52,7 +52,7 @@ class Trader(CellAgent):
         self.income_tax_sugar = income_tax_sugar
         self.income_tax_spice = income_tax_spice
         self.strategy = strategy or self.random.choice(["stag", "hare"])
-    
+
     @property
     def wealth(self):
         return self.sugar + self.spice
@@ -92,13 +92,15 @@ class Trader(CellAgent):
 
         other = self.random.choice(neighbors)
 
-        payoff_you, payoff_them = self.model.staghunt_payoffs[
+        payoff_self, payoff_other = self.model.staghunt_payoffs[
             (self.strategy, other.strategy)
         ]
 
-        other.sugar += payoff_them
-
-        return payoff_you
+        # Award the partner their payoff in both resources
+        other.sugar += payoff_other
+        other.spice += payoff_other
+        # return the bonus to add to our own sugar & spice in eat()
+        return payoff_self
 
     def get_trader(self, cell):
         """
@@ -129,7 +131,6 @@ class Trader(CellAgent):
         """
         Helper function for self.maybe_die()
         """
-
 
         return (self.sugar <= 0) or (self.spice <= 0)
 
@@ -164,20 +165,21 @@ class Trader(CellAgent):
 
         exchanges sugar and spice between traders
         """
-        vat_rate_sugar, vat_rate_spice  = self.model.vat_rate_sugar, self.model.vat_rate_spice
+        vat_rate_sugar, vat_rate_spice = (
+            self.model.vat_rate_sugar,
+            self.model.vat_rate_spice,
+        )
 
         sugar_vat = sugar * vat_rate_sugar
         spice_vat = spice * vat_rate_spice
 
-
-        self.sugar += sugar -sugar_vat
+        self.sugar += sugar - sugar_vat
         other.sugar -= sugar
         self.spice -= spice
-        other.spice += spice -spice_vat
+        other.spice += spice - spice_vat
 
-        self.model.treasury["sugar"] += sugar_vat 
+        self.model.treasury["sugar"] += sugar_vat
         self.model.treasury["spice"] += spice_vat
-
 
     def maybe_sell_spice(self, other, price, welfare_self, welfare_other):
         """
@@ -185,19 +187,19 @@ class Trader(CellAgent):
         """
 
         sugar_exchanged, spice_exchanged = self.calculate_sell_spice_amount(price)
-        
-        
-        
-        vat_rate_sugar, vat_rate_spice = self.model.vat_rate_sugar, self.model.vat_rate_spice 
+
+        vat_rate_sugar, vat_rate_spice = (
+            self.model.vat_rate_sugar,
+            self.model.vat_rate_spice,
+        )
         sugar_vat = sugar_exchanged * vat_rate_sugar
         spice_vat = spice_exchanged * vat_rate_spice
-
 
         # Assess new sugar and spice amount - what if change did occur
         self_sugar = self.sugar + sugar_exchanged - sugar_vat
         other_sugar = other.sugar - sugar_exchanged
         self_spice = self.spice - spice_exchanged
-        other_spice = other.spice + spice_exchanged -spice_vat
+        other_spice = other.spice + spice_exchanged - spice_vat
         # double check to ensure agents have resources
 
         if (
@@ -252,15 +254,13 @@ class Trader(CellAgent):
         # calculate price
         price = math.sqrt(mrs_self * mrs_other)
 
-        
-
         if mrs_self > mrs_other:
             # self is a sugar buyer, spice seller
             sold = self.maybe_sell_spice(other, price, welfare_self, welfare_other)
             # no trade - criteria not met
             if not sold:
                 return
-            
+
         else:
             # self is a spice buyer, sugar seller
             sold = other.maybe_sell_spice(self, price, welfare_other, welfare_self)
@@ -271,7 +271,7 @@ class Trader(CellAgent):
         # Capture data
         self.prices.append(price)
         self.trade_partners.append(other.unique_id)
-        self.model.trades_made += 1 
+        self.model.trades_made += 1
         # continue trading
         self.trade(other)
 
@@ -302,7 +302,7 @@ class Trader(CellAgent):
             # no empty neighboring cells, stay put
             return
         # 2. determine which move maximizes welfare
-        
+
         welfares = [
             self.calculate_welfare(
                 self.sugar + cell.sugar,
@@ -339,28 +339,21 @@ class Trader(CellAgent):
         base_sugar = self.cell.sugar
         base_spice = self.cell.spice
 
-        bonus_sugar = 0
-        if self.model.enable_staghunt:
-            bonus_sugar = self.play_staghunt()
+        bonus = self.play_staghunt() if self.model.enable_staghunt else 0
 
-        income_sugar = base_sugar + bonus_sugar
-        income_spice = base_spice
+        income_sugar = base_sugar + bonus
+        income_spice = base_spice + bonus
 
         self._last_income_sugar = income_sugar
         self._last_income_spice = income_spice
-
-        # rate_s = self._get_income_tax_rate(income_sugar)
-        # rate_p = self._get_income_tax_rate(income_spice)
-        # tax_s = rate_s * income_sugar
-        # tax_p = rate_p * income_spice
 
         total_income = income_sugar + income_spice
         rate = self._get_income_tax_rate(total_income)
         tax_s = rate * income_sugar
         tax_p = rate * income_spice
 
-        self.model.treasury["sugar"]  += tax_s
-        self.model.treasury["spice"]  += tax_p
+        self.model.treasury["sugar"] += tax_s
+        self.model.treasury["spice"] += tax_p
 
         self.sugar += income_sugar - tax_s
         self.spice += income_spice - tax_p
@@ -380,9 +373,6 @@ class Trader(CellAgent):
             self.sugar = self.initial_sugar
             self.spice = self.initial_spice
             self.cell = self.model.random.choice(self.model.grid.all_cells.cells)
-
-
-
 
     def trade_with_neighbors(self):
         """
@@ -428,5 +418,31 @@ class Trader(CellAgent):
 
         self.model.treasury["sugar"] += sugar_tax
         self.model.treasury["spice"] += spice_tax
-        
 
+    def imitation_update(self):
+        """
+        Look at neighbors + self, pick the one with highest last income,
+        and copy their strategy with probability p_copy. Allows a tiny mutation.
+        """
+        # Gather neighbors within vision (excludes self)
+        neighbors = []
+        for cell in self.cell.get_neighborhood(self.vision, include_center=False):
+            for ag in cell.agents:
+                if isinstance(ag, Trader) and ag is not self:
+                    neighbors.append(ag)
+
+        # Include self in the comparison pool
+        contenders = neighbors + [self]
+
+        # Find the agent with the highest last total income
+        best = max(
+            contenders, key=lambda a: a._last_income_sugar + a._last_income_spice
+        )
+
+        # Copy best strategy with probability p_copy
+        if best.strategy != self.strategy and self.random.random() < self.model.p_copy:
+            self.strategy = best.strategy
+
+        # Small random mutation with probability p_mutate
+        if self.random.random() < self.model.p_mutate:
+            self.strategy = self.random.choice(["stag", "hare"])
