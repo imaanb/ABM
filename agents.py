@@ -119,13 +119,32 @@ class Trader(CellAgent):
         self.trade()
         """
 
-        # calculate total resources
-        m_total = self.metabolism_sugar + self.metabolism_spice
-        # Cobb-Douglas functional form; starting on p. 97
-        # on Growing Artificial Societies
-        return sugar ** (self.metabolism_sugar / m_total) * spice ** (
-            self.metabolism_spice / m_total
-        )
+        # # calculate total resources
+        # m_total = self.metabolism_sugar + self.metabolism_spice
+        # if m_total <=0:
+        #     return 0.0
+        # # Cobb-Douglas functional form; starting on p. 97
+        # # on Growing Artificial Societies
+        # return sugar ** (self.metabolism_sugar / m_total) * spice ** (
+        #     self.metabolism_spice / m_total
+        # )
+        m_s = self.metabolism_sugar
+        m_sp = self.metabolism_spice
+        m_total = m_s + m_sp
+
+        # Guard against zero total metabolism
+        if m_total <= 0 or not math.isfinite(m_total):
+            return 0.0
+
+        exp_s = m_s / m_total
+        exp_sp = m_sp / m_total
+
+        # Guard against invalid exponents
+        if not (math.isfinite(exp_s) and math.isfinite(exp_sp)):
+            return 0.0
+
+        # 0**positive = 0 is fine; negative or non‐finite bases would have errored earlier
+        return sugar**exp_s * spice**exp_sp
 
     def is_starved(self):
         """
@@ -143,13 +162,26 @@ class Trader(CellAgent):
         Determines what trader agent needs and can give up
         """
 
-        return (spice / self.metabolism_spice) / (sugar / self.metabolism_sugar)
+        # return (spice / self.metabolism_spice) / (sugar / self.metabolism_sugar)
+        m_s = self.metabolism_sugar
+        m_sp = self.metabolism_spice
+
+        # Guards against zero or non‐finite values
+        if m_s <= 0 or m_sp <= 0:
+            return 0.0
+        if sugar <= 0 or spice <= 0:
+            return 0.0
+
+        ratio = (spice / m_sp) / (sugar / m_s)
+        return ratio if math.isfinite(ratio) else 0.0
 
     def calculate_sell_spice_amount(self, price):
         """
         helper function for self.maybe_sell_spice() which is called from
         self.trade()
         """
+        if not math.isfinite(price) or price == 0:
+            return 0, 0
 
         if price >= 1:
             sugar = 1
@@ -323,6 +355,9 @@ class Trader(CellAgent):
         # convert index to positions of those cells
         candidates = [neighboring_cells[i] for i in candidate_indices]
 
+        if not candidates:
+            # no valid moves at this vision, stay put
+            return
         min_dist = min(get_distance(self.cell, cell) for cell in candidates)
 
         final_candidates = [
