@@ -235,10 +235,9 @@ class Trader(CellAgent):
         """
 
         # sanity check to verify code is working as expected
-        assert self.sugar > 0
-        assert self.spice > 0
-        assert other.sugar > 0
-        assert other.spice > 0
+        if self.sugar <= 0 or self.spice <= 0 or other.sugar <= 0 or other.spice <= 0:
+            # one of the agents is starved, no trade
+            return
 
         # calculate marginal rate of substitution in Growing Artificial Societies p. 101
         mrs_self = self.calculate_MRS(self.sugar, self.spice)
