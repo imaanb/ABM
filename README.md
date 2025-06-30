@@ -1,11 +1,11 @@
 # Sugarscape G1 + Growback + Trade + Taxing
 
-An **agent‑based recreation** of the *Sugarscape* model described by Epstein & Axtell (1996), written in **Python 3.12**, powered by the bleeding‑edge **Mesa 3** core and exposed through a **Solara** front‑end.
+An **agent‑based recreation** of the *Sugarscape* model described by Epstein & Axtell (1996). 
 
 [![Python 3.12](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/)  [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
-## Quick start
+## Quick start Solara UI
 
 ```bash
 # 1 – clone
