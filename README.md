@@ -8,22 +8,25 @@ An **agent‑based recreation** of the *Sugarscape* model described by Epstein 
 ## Quick start Solara UI
 
 ```bash
-# 1 – clone
-$ git clone https://github.com/imaanb/ABM.git
-$ cd ABM
+# 1 – Clone the repo
+git clone https://github.com/imaanb/ABM.git
+cd ABM
 
-# 2 – virtual environment
-$ python -m venv .venv
-$ source .venv/bin/activate  # Windows: .venv\Scripts\activate
+# 2 – Create & activate a virtual environment
+python3 -m venv .venv
+source .venv/bin/activate       # Windows PowerShell: .venv\Scripts\Activate
 
-# 3 – install runtime deps
-$ pip install -r requirements.txt
+# 3 – Install exact, pinned dependencies
+pip install -r requirements.txt
 
-# 4 – launch the interactive UI
-$ solara run src/sugarscape/app.py    # opens http://localhost:8765
-```
+# 4 – Install your package in “editable” mode
+pip install -e .
 
-The browser window lets you **start / pause / reset** the simulation and watch population‑level metrics in real time.
+# 5 – (Optional) Verify the install
+python -c "import sugarscape; print('sugarscape version:', sugarscape.__version__)"
+
+# 6 – Launch the Solara UI (opens http://localhost:8765)
+solara run sugarscape.app
 
 ---
 ## Repository layout
@@ -40,7 +43,8 @@ The browser window lets you **start / pause / reset** the simulation and watch
 | `data/`                       | Pickle outputs from GSA                   | 
 | `visualizations/`             | OFAT and Sobol's method plot              | 
 | `.gitignore`                  | Gitignore                                 | 
-| `requirements.txt`            | Module requirements                      | 
+| `requirements.txt`            | Module requirements                       | 
+| `setup.py`                    | Build and install script                  |
 ---
 
 ##  References
