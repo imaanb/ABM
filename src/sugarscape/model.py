@@ -6,7 +6,7 @@ import numpy as np
 from mesa.discrete_space import OrthogonalVonNeumannGrid
 from mesa.discrete_space.property_layer import PropertyLayer
 
-from src.sugarscape.agents import Trader
+from sugarscape.agents import Trader
 
 
 # Helper Functions
@@ -185,17 +185,11 @@ class SugarscapeG1mt(mesa.Model):
             model_reporters={
                 "#Traders": lambda m: len(m.agents),
                 "Trade Volume": lambda m: sum(len(a.trade_partners) for a in m.agents),
-                # "Price": lambda m: geometric_mean(
-                #     flatten([a.prices for a in m.agents])
-                # ),
                 "Treasury Sugar": lambda m: m.treasury["sugar"],
                 "Treasury Spice": lambda m: m.treasury["spice"],
                 "Treasury Total": lambda m: m.treasury["sugar"] + m.treasury["spice"],
                 "redistributed cummulative": lambda m: m.redistributed,
                 "trading": lambda m: m.trades_made,
-                # "Sugar Treasury": lambda m: m.government_treasury_sugar,
-                # "Spice Treasury": lambda m: m.government_treasury_spice,
-                # "Wealth Treasury": lambda m: m.government_treasury_wealth,
                 "Gini": compute_gini,
                 "Lorenz": compute_lorenz,
                 "Average Wealth": lambda m: np.mean(
@@ -216,13 +210,9 @@ class SugarscapeG1mt(mesa.Model):
         raw = pkgutil.get_data(
             "mesa.examples.advanced.sugarscape_g1mt", "sugar-map.txt"
         )
-        # read in landscape file from supplementary material
-        # self.sugar_distribution = np.genfromtxt(Path(__file__).parent / "sugar-map.txt")
-        # self.spice_distribution = np.flip(self.sugar_distribution, 1)
 
         sd = np.genfromtxt(StringIO(raw.decode("utf-8")), dtype=int)
-        # scale = 3
-        # sd = (sd * scale).astype(int)
+
         self.sugar_distribution = sd
 
         self.spice_distribution = np.flip(sd, axis=1)
@@ -263,17 +253,8 @@ class SugarscapeG1mt(mesa.Model):
         - 'proportional': Give all agents a percentage of the treasury.
         - 'social': Give poorer agents (with less total wealth) a larger share.
         """
-        # print("hi")
-        # skip if none
         if self.redistribution_regime == "none":
             return
-
-        # print(
-        #     f"[step {self.steps}] Redistribution regime: {self.redistribution_regime}"
-        # )
-        # print(
-        #     f"  Treasury sugar: {self.treasury['sugar']:.2f}, spice: {self.treasury['spice']:.2f}"
-        # )
 
         # proportinal: each agent gets equal amount
         if self.redistribution_regime == "proportional":

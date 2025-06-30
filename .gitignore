@@ -2,3 +2,5 @@
 # Byte-code cache
 __pycache__/
 *.py[cod]
+
+src/sugarscape.egg-info/

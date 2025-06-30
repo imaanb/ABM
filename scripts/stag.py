@@ -3,7 +3,7 @@ import numpy as np
 import seaborn as sns
 from tqdm import tqdm
 
-from src.sugarscape.model import SugarscapeG1mt
+from sugarscape.model import SugarscapeG1mt
 
 # PLOTTING A HEATMAP OF STAG COORDINATION
 

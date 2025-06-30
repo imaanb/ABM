@@ -1,10 +1,12 @@
+import os
 import random
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 from mesa.batchrunner import batch_run
 
-from src.sugarscape.model import SugarscapeG1mt
+from sugarscape.model import SugarscapeG1mt
 
 cont_vars = [
     "initial_population",
@@ -14,20 +16,7 @@ cont_vars = [
     "endowment_max",
     "vision_min",
     "vision_max",
-    # "metabolism_min",
-    # "metabolism_max",
 ]
-# cont_bounds = [
-#     [50, 500],
-#     [0.1, 2.0],
-#     [2.0, 3],
-#     [0, 10],
-#     [15, 30],
-#     [1.0, 5.0],
-#     [5.0, 10.0],
-#     [0, 10],
-#     [15, 30],
-# ]
 
 adjusted_bounds = [
     [25, 250],  # initial population
@@ -44,9 +33,6 @@ problem = {
     "bounds": adjusted_bounds,
 }
 
-# ----------------------------------------------------------------------
-# Integer variables that need rounding
-# ----------------------------------------------------------------------
 integer_vars = {
     "initial_population",
     "endowment_min",
@@ -57,9 +43,7 @@ integer_vars = {
     "metabolism_max",
 }
 
-# ----------------------------------------------------------------------
-# Fixed discrete factors – only one option each
-# ----------------------------------------------------------------------
+
 discrete_factors = {
     "wealth_tax_system": [0],  # 0 ≙ "none"
     "income_tax_system": [0],  # 0 ≙ "none"
@@ -69,11 +53,9 @@ discrete_factors = {
 wealth_tax_map = {0: "none", 1: "proportional", 2: "progressive", 3: "degressive"}
 income_tax_map = wealth_tax_map.copy()
 
-
-import os
-
-max_steps = 200
-n = 5
+# Set up the problem dictionary with bounds and names
+max_steps = 5  # 200
+n = 2  # 5
 
 
 def run_model(params, seed=None):
@@ -132,9 +114,7 @@ def run_model(params, seed=None):
         return np.nan
 
 
-# -------------------------
 # OFAT Analysis
-# -------------------------
 
 print("=== ONE FACTOR AT A TIME (OFAT) ANALYSIS ===")
 
@@ -160,6 +140,7 @@ print(f"Total model runs: {len(problem['names']) * 10 * n}")
 results = {
     var: {"x": [], "y_mean": [], "y_std": [], "y_all": []} for var in problem["names"]
 }
+
 
 # Loop over each continuous variable
 print("Running OFAT Analysis...")
@@ -206,10 +187,7 @@ for i, var in enumerate(problem["names"]):
 
 print("OFAT Analysis completed!")
 
-
-# -------------------------
 # Plotting results with error bars
-# -------------------------
 
 fig, axs = plt.subplots(
     len(problem["names"]), 1, figsize=(10, 4 * len(problem["names"]))
@@ -271,6 +249,11 @@ for ax, var in zip(axs, problem["names"]):
 plt.tight_layout()
 plt.show()
 
+project_root = Path(__file__).resolve().parent.parent
+output_dir = project_root / "visualizations" / "ofat_plots_test"
+os.makedirs(output_dir, exist_ok=True)
+
+
 # Print summary statistics
 print("\n=== OFAT SUMMARY STATISTICS ===")
 for var in problem["names"]:
@@ -279,12 +262,7 @@ for var in problem["names"]:
     avg_std = np.mean(results[var]["y_std"])
     print(f"{var:15s}: Range = {y_range:.4f}, Avg StdDev = {avg_std:.4f}")
 
-    # -------------------------
     # Save plots as images
-    # -------------------------
-
-    output_dir = "ofat_plots"
-    os.makedirs(output_dir, exist_ok=True)
 
     for var in problem["names"]:
         fig, ax = plt.subplots(figsize=(8, 5))

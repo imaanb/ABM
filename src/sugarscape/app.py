@@ -6,7 +6,7 @@ from mesa.visualization.components.matplotlib_components import make_mpl_space_c
 from mesa.visualization.utils import update_counter
 
 # from mesa.examples.advanced.sugarscape_g1mt.model import SugarscapeG1mt
-from src.sugarscape.model import SugarscapeG1mt
+from sugarscape.model import SugarscapeG1mt
 
 print("🐝 Loading APP.PY at", __file__)
 
@@ -125,7 +125,6 @@ Page = SolaraViz(
     components=[
         sugarscape_space,
         make_plot_component("#Traders"),
-        make_plot_component("Price"),
         make_plot_component("Gini"),
         LorenzPlot,
         make_plot_component("Treasury Total"),
