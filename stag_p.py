@@ -1,11 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
-from model import SugarscapeG1mt
-# Assuming your Sugarscape model class is already imported
-# from sugarscape_model import SugarscapeG1mt
 
-# -------- Parameters --------
+from model import SugarscapeG1mt
+
+## PLOTTING THE EFFECTS of p_copy and p_mutate on Stag Coordination
+
+# Assuming your Sugarscape model class is already imported
 steps = 100
 runs = 25
 
@@ -17,8 +18,6 @@ p_mutate_values = [0.005, 0.02, 0.05]
 p_mutate_fixed = 0.02
 p_copy_fixed = 0.8
 
-
-# -------- Plot 1: Vary p_copy --------
 plt.figure(figsize=(10, 6))
 
 for p_copy in p_copy_values:
@@ -32,7 +31,7 @@ for p_copy in p_copy_values:
             initial_population=200,
             width=50,
             height=50,
-            seed=None  # Random seed each run
+            seed=None,  # Random seed each run
         )
         model.run_model(step_count=steps)
 
@@ -43,8 +42,8 @@ for p_copy in p_copy_values:
     avg = all_runs.mean(axis=0)
     std = all_runs.std(axis=0)
 
-    plt.plot(range(steps+1), avg, label=f"p_copy={p_copy}", linewidth=2)
-    plt.fill_between(range(steps+1), avg - std, avg + std, alpha=0.2)
+    plt.plot(range(steps + 1), avg, label=f"p_copy={p_copy}", linewidth=2)
+    plt.fill_between(range(steps + 1), avg - std, avg + std, alpha=0.2)
 
 plt.title("Effect of p_copy on Stag Coordination (100 Runs)", fontsize=14)
 plt.xlabel("Step", fontsize=12)
@@ -55,8 +54,6 @@ plt.legend(title="Imitation Rate", fontsize=9)
 plt.tight_layout()
 plt.show()
 
-
-# -------- Plot 2: Vary p_mutate --------
 plt.figure(figsize=(10, 6))
 
 for p_mutate in p_mutate_values:
@@ -70,7 +67,7 @@ for p_mutate in p_mutate_values:
             initial_population=200,
             width=50,
             height=50,
-            seed=None
+            seed=None,
         )
         model.run_model(step_count=steps)
 
@@ -81,8 +78,8 @@ for p_mutate in p_mutate_values:
     avg = all_runs.mean(axis=0)
     std = all_runs.std(axis=0)
 
-    plt.plot(range(steps+1), avg, label=f"p_mutate={p_mutate}", linewidth=2)
-    plt.fill_between(range(steps+1), avg - std, avg + std, alpha=0.2)
+    plt.plot(range(steps + 1), avg, label=f"p_mutate={p_mutate}", linewidth=2)
+    plt.fill_between(range(steps + 1), avg - std, avg + std, alpha=0.2)
 
 plt.title("Effect of p_mutate on Stag Coordination (100 Runs)", fontsize=14)
 plt.xlabel("Step", fontsize=12)

@@ -1,17 +1,10 @@
-# exact mesa verison
-mesa @ git+https://github.com/projectmesa/mesa@759673a981bf2af5e11ededbf81c918448d86005
-
-# UI stack
-solara
-ipywidgets
-ipympl
-altair
-vega_datasets
-
-# scientific stack
-numpy
-pandas
-scipy
-networkx
-matplotlib
-
+ipython==8.12.3
+joblib==1.5.1
+matplotlib==3.10.3
+mesa==3.2.0
+numpy==2.3.1
+pandas==2.3.0
+SALib==1.5.1
+seaborn==0.13.2
+solara==1.49.0
+tqdm==4.67.1
