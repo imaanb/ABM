@@ -30,22 +30,19 @@ The browser window lets you **start / pause / reset** the simulation and watch
 
 \## Repository layout (2025‑06)
 
-| Path                          | What it is                                | Why you might open it                       |
-| ----------------------------- | ----------------------------------------- | ------------------------------------------- |
-| `src/sugarscape/agents.py`    | Agent classes (`Citizen`, `Patch`, …)     | Modify individual‑level rules or attributes |
-| `src/sugarscape/model.py`     | Core Mesa `Model` implementation          | Tweak global parameters, add collectors     |
-| `src/sugarscape/app.py`       | **Solara** front‑end                      | Change the UI or embed extra plots          |
-| `scripts/stag.py`             | Headless run → saves figures              | Quick batch experiments without UI          |
-| `scripts/ofat.py`             | One‑factor‑at‑a‑time sweep                | Single‑parameter sensitivity analysis       |
-| `notebooks/experiments.ipynb` | Free‑form exploration                     | Prototype ideas & visuals in Jupyter        |
-| `notebooks/final_gsa.ipynb`   | Global‑sensitivity notebook (SALib/Sobol) | Reproduce report figures                    |
-| `SA_results/`                 | CSV/pickle outputs from sweeps            | Consumed by notebooks & visual scripts      |
-| `visualizations/`             | Matplotlib / Plotly figures               | Ready‑to‑use images for talks & papers      |
-| `.gitignore`                  | Git housekeeping                          | Keeps caches & OS junk out of the repo      |
-| `requirements.txt`            | Runtime dependencies                      | Reproduce the environment                   |
-
-*(Development helpers such as `black`, `ruff`, or `ipykernel` live in `requirements-dev.txt`, excluded here for brevity.)*
-
+| Path                          | Function                                | 
+| ----------------------------- | ----------------------------------------- | 
+| `src/sugarscape/agents.py`    | Agent classes (`Citizen`, `Patch`, …)     | 
+| `src/sugarscape/model.py`     | Core Mesa `Model` implementation          | 
+| `src/sugarscape/app.py`       | **Solara** front‑end                      | 
+| `scripts/stag.py`             | Visualizations related to stag hunt game  | 
+| `scripts/ofat.py`             | Script for performing OFAT                | 
+| `notebooks/experiments.ipynb` | Experiments related to Gini Coefficient and Lorenz Curve| 
+| `notebooks/final_gsa.ipynb`   | Global‑sensitivity notebook (SALib/Sobol) | 
+| `SA_results/`                 | pickle outputs from sweeps                | 
+| `visualizations/`             | OFAT and Sobol's method plot              | 
+| `.gitignore`                  | Git housekeeping                          | 
+| `requirements.txt`            | Runtime dependencies                      | 
 ---
 
 \##  References
