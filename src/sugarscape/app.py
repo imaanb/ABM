@@ -118,8 +118,6 @@ model = SugarscapeG1mt(
     enable_staghunt=False,
 )
 
-# model = SugarscapeG1mt()
-
 Page = SolaraViz(
     model,
     components=[
@@ -127,11 +125,10 @@ Page = SolaraViz(
         make_plot_component("#Traders"),
         make_plot_component("Gini"),
         LorenzPlot,
-        make_plot_component("Treasury Total"),
-        make_plot_component("redistributed cummulative"),
+        # Additional plots can be added here
+        # make_plot_component("Treasury Total"),
+        # make_plot_component("redistributed cummulative"),
         # TreasuryDisplay,
-        # make_plot_component("Wealth Treasury"),
-        # make_plot_component("Spice Treasury"),
     ],
     model_params=model_params,
     name="Sugarscape {G1, M, T}",
