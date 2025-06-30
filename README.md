@@ -6,7 +6,7 @@ An **agent‑based recreation** of the *Sugarscape* model described by Epstein 
 
 ---
 
-\## Quick start
+## Quick start
 
 ```bash
 # 1 – clone
@@ -28,7 +28,7 @@ The browser window lets you **start / pause / reset** the simulation and watch
 
 ---
 
-\## Repository layout (2025‑06)
+## Repository layout
 
 | Path                          | Function                                | 
 | ----------------------------- | ----------------------------------------- | 
@@ -45,13 +45,13 @@ The browser window lets you **start / pause / reset** the simulation and watch
 | `requirements.txt`            | Runtime dependencies                      | 
 ---
 
-\##  References
+##  References
 
 * Epstein, J. M. & Axtell, R. L. ***Growing Artificial Societies: Social Science from the Bottom Up***, Brookings Press (1996).
 * Mesa Development Team. *Mesa: Agent‑based modeling in Python* (2025). [https://github.com/projectmesa/mesa](https://github.com/projectmesa/mesa)
 
 ---
 
-\##  License
+##  License
 
 Released under the **MIT License** – see [LICENSE](LICENSE) for details.
