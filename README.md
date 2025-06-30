@@ -31,21 +31,21 @@ solara run sugarscape.app
 ---
 ## Repository layout
 
-| Path                          | Function                                | 
-| ----------------------------- | ----------------------------------------- | 
-| `src/sugarscape/agents.py`    | Agent classes (`Trader`)                  | 
-| `src/sugarscape/model.py`     | Core Mesa `Model` implementation          | 
-| `src/sugarscape/app.py`       | **Solara** front‑end                      | 
-| `scripts/stag.py`             | Visualizations related to stag hunt game  | 
-| `scripts/ofat.py`             | Script for performing OFAT                | 
-| `notebooks/experiments.ipynb` | Experiments related to Gini Coefficient and Lorenz Curve| 
-| `notebooks/final_gsa.ipynb`   | Global‑sensitivity notebook (SALib/Sobol) | 
-| `data/`                       | Pickle outputs from GSA                   | 
-| `visualizations/`             | OFAT and Sobol's method plot              | 
-| `.gitignore`                  | Gitignore                                 | 
-| `requirements.txt`            | Module requirements                       | 
-| `setup.py`                    | Build and install script                  |
----
+| Path                        | Function                                   |
+| --------------------------- | ------------------------------------------ |
+| `src/sugarscape/agents.py`  | Agent classes (`Trader`)                  |
+| `src/sugarscape/model.py`   | Core Mesa `Model` implementation           |
+| `src/sugarscape/app.py`     | **Solara** front-end                       |
+| `scripts/stag.py`           | Visualizations related to stag hunt game   |
+| `scripts/ofat.py`           | Script for performing OFAT                 |
+| `notebooks/experiments.ipynb` | Experiments related to Gini Coefficient and Lorenz Curve |
+| `notebooks/final_gsa.ipynb` | Global-sensitivity notebook (SALib/Sobol) |
+| `data/`                     | Pickle outputs from GSA                    |
+| `visualizations/`           | OFAT and Sobol's method plot               |
+| `.gitignore`                | Gitignore                                  |
+| `requirements.txt`          | Module requirements                        |
+| `setup.py`                  | Build and install script                   |
+
 
 ##  References
 

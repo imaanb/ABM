@@ -112,9 +112,6 @@ class SugarscapeG1mt(mesa.Model):
 
         # -- TREASURY -- #
         self.treasury = {"sugar": 0, "spice": 0}  # Treasury where tax will be collected
-        # self.vat_rate_sugar = .2 # VAT rate
-        # self.vat_rate_spice = .2 # VAT rate
-        # self.redistribution_regime = "proportional" # Choose from "geographic", "proportional", "social"
         self.resources = ["sugar", "spice"]
         """
         # Initiate taxes
@@ -372,8 +369,6 @@ class SugarscapeG1mt(mesa.Model):
             # outside or inside if statement?
             self.redistribute_tax()
         # collect model level data
-        # fixme we can already collect agent class data
-        # fixme, we don't have resource agents anymore so this can be done simpler
 
         self.datacollector.collect(self)
 
@@ -395,8 +390,6 @@ class SugarscapeG1mt(mesa.Model):
         agent_trades = [agent for agent in agent_trades if agent[2] is not None]
         # Reassign the dictionary value with lean trade data
         self.datacollector._agent_records[self.steps] = agent_trades
-        # if self.steps == 1:
-        #     print(self.datacollector.get_model_vars_dataframe().columns)
 
     def run_model(self, step_count=1000):
         for _ in range(step_count):

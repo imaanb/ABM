@@ -5,7 +5,6 @@ from mesa.visualization.components import AgentPortrayalStyle, PropertyLayerStyl
 from mesa.visualization.components.matplotlib_components import make_mpl_space_component
 from mesa.visualization.utils import update_counter
 
-# from mesa.examples.advanced.sugarscape_g1mt.model import SugarscapeG1mt
 from sugarscape.model import SugarscapeG1mt
 
 print("🐝 Loading APP.PY at", __file__)
@@ -134,4 +133,4 @@ Page = SolaraViz(
     name="Sugarscape {G1, M, T}",
     play_interval=150,
 )
-Page  # noqa
+Page
