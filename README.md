@@ -1,12 +1,11 @@
-# Sugarscape G1 + Growback + Trade
+# Sugarscape G1 + Growback + Trade + Taxing
 
 An **agent‑based recreation** of the *Sugarscape* model described by Epstein & Axtell (1996), written in **Python 3.12**, powered by the bleeding‑edge **Mesa 3** core and exposed through a **Solara** front‑end.
 
 [![Python 3.12](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/)  [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
-
-## Quick start
+## Quick start
 
 ```bash
 # 1 – clone
@@ -27,8 +26,7 @@ $ solara run src/sugarscape/app.py    # opens http://localhost:8765
 The browser window lets you **start / pause / reset** the simulation and watch population‑level metrics in real time.
 
 ---
-
-## Repository layout
+## Repository layout
 
 | Path                          | Function                                | 
 | ----------------------------- | ----------------------------------------- | 
@@ -45,13 +43,12 @@ The browser window lets you **start / pause / reset** the simulation and watch
 | `requirements.txt`            | Runtime dependencies                      | 
 ---
 
-##  References
+##  References
 
 * Epstein, J. M. & Axtell, R. L. ***Growing Artificial Societies: Social Science from the Bottom Up***, Brookings Press (1996).
 * Mesa Development Team. *Mesa: Agent‑based modeling in Python* (2025). [https://github.com/projectmesa/mesa](https://github.com/projectmesa/mesa)
 
 ---
-
-##  License
+##  License
 
 Released under the **MIT License** – see [LICENSE](LICENSE) for details.
