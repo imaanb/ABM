@@ -1,14 +1,12 @@
 import solara
-
-# from mesa.examples.advanced.sugarscape_g1mt.model import SugarscapeG1mt
-from model  import SugarscapeG1mt
+from matplotlib.figure import Figure
 from mesa.visualization import Slider, SolaraViz, make_plot_component
 from mesa.visualization.components import AgentPortrayalStyle, PropertyLayerStyle
 from mesa.visualization.components.matplotlib_components import make_mpl_space_component
 from mesa.visualization.utils import update_counter
-from matplotlib.figure import Figure
 
-from model import SugarscapeG1mt
+# from mesa.examples.advanced.sugarscape_g1mt.model import SugarscapeG1mt
+from src.sugarscape.model import SugarscapeG1mt
 
 print("🐝 Loading APP.PY at", __file__)
 
@@ -40,7 +38,7 @@ def LorenzPlot(model):
     fig = Figure()
     ax = fig.add_subplot(111)
 
-    # Lorenz curve 
+    # Lorenz curve
     lorenz = model.datacollector.get_model_vars_dataframe().iloc[-1]["Lorenz"]
     if lorenz:
         x, y = zip(*lorenz)
@@ -131,7 +129,7 @@ Page = SolaraViz(
         make_plot_component("Gini"),
         LorenzPlot,
         make_plot_component("Treasury Total"),
-        make_plot_component("redistributed cummulative")
+        make_plot_component("redistributed cummulative"),
         # TreasuryDisplay,
         # make_plot_component("Wealth Treasury"),
         # make_plot_component("Spice Treasury"),
@@ -141,5 +139,3 @@ Page = SolaraViz(
     play_interval=150,
 )
 Page  # noqa
-
-

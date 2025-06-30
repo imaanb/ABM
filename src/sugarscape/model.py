@@ -6,7 +6,7 @@ import numpy as np
 from mesa.discrete_space import OrthogonalVonNeumannGrid
 from mesa.discrete_space.property_layer import PropertyLayer
 
-from agents import Trader
+from src.sugarscape.agents import Trader
 
 
 # Helper Functions
