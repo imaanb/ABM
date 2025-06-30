@@ -30,17 +30,17 @@ The browser window lets you **start / pause / reset** the simulation and watch
 
 | Path                          | Function                                | 
 | ----------------------------- | ----------------------------------------- | 
-| `src/sugarscape/agents.py`    | Agent classes (`Citizen`, `Patch`, …)     | 
+| `src/sugarscape/agents.py`    | Agent classes (`Trader`)                  | 
 | `src/sugarscape/model.py`     | Core Mesa `Model` implementation          | 
 | `src/sugarscape/app.py`       | **Solara** front‑end                      | 
 | `scripts/stag.py`             | Visualizations related to stag hunt game  | 
 | `scripts/ofat.py`             | Script for performing OFAT                | 
 | `notebooks/experiments.ipynb` | Experiments related to Gini Coefficient and Lorenz Curve| 
 | `notebooks/final_gsa.ipynb`   | Global‑sensitivity notebook (SALib/Sobol) | 
-| `SA_results/`                 | pickle outputs from sweeps                | 
+| `data/`                       | Pickle outputs from GSA                   | 
 | `visualizations/`             | OFAT and Sobol's method plot              | 
-| `.gitignore`                  | Git housekeeping                          | 
-| `requirements.txt`            | Runtime dependencies                      | 
+| `.gitignore`                  | Gitignore                                 | 
+| `requirements.txt`            | Module requirements                      | 
 ---
 
 ##  References
